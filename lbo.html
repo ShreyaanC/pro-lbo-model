@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="Shreyaan Chauhan">
+    <meta name="copyright" content="SC Designs 2025">
+    <title>Pro LBO Model | SC Designs</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        fin: { accent: '#6366f1' }
+                    },
+                    boxShadow: {
+                        'neon': '0 0 20px rgba(99, 102, 241, 0.4)',
+                        'neon-strong': '0 0 30px rgba(99, 102, 241, 0.6)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* CORE SETTINGS */
+        body { 
+            transition: background-color 0.5s ease, color 0.5s ease;
+            user-select: none; -webkit-user-select: none;
+            overflow-x: hidden;
+        }
+
+        /* GLASS PANEL (Adaptive) */
+        .glass-panel {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid transparent;
+        }
+        
+        /* Dark Mode Glass */
+        html.dark .glass-panel {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(20px);
+            border-color: rgba(148, 163, 184, 0.1);
+        }
+        
+        /* Light Mode Glass */
+        html:not(.dark) .glass-panel {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            border-color: rgba(203, 213, 225, 0.8);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        }
+
+        /* HOVER ANIMATIONS */
+        .glass-panel:hover {
+            transform: translateY(-5px) scale(1.01);
+            z-index: 10;
+        }
+        html.dark .glass-panel:hover {
+            border-color: rgba(99, 102, 241, 0.5);
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.15);
+        }
+        html:not(.dark) .glass-panel:hover {
+            border-color: #6366f1;
+            box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.15);
+        }
+
+        /* INPUTS */
+        input[type="number"], input[type="text"], select { transition: all 0.3s; outline: none; }
+        input:focus { transform: scale(1.02); }
+        
+        /* SLIDER */
+        input[type=range] { height: 6px; border-radius: 5px; background-image: linear-gradient(#6366f1, #6366f1); background-repeat: no-repeat; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 18px; width: 18px; border-radius: 50%; background: #fff; cursor: pointer;
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.8); transition: transform 0.2s;
+        }
+        input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.5); }
+
+        /* BRANDING */
+        .brand-logo {
+            font-family: 'Inter', sans-serif; letter-spacing: -1px;
+            background: linear-gradient(to right, #6366f1, #a5b4fc);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        html.dark ::-webkit-scrollbar-track { background: #020617; }
+        html.dark ::-webkit-scrollbar-thumb { background: #334155; border-radius: 5px; border: 2px solid #020617; }
+        html:not(.dark) ::-webkit-scrollbar-track { background: #f1f5f9; }
+        html:not(.dark) ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 5px; }
+
+        /* ACTIVE BUTTON STATE */
+        .btn-active {
+            background-color: #4f46e5 !important; color: white !important;
+            box-shadow: 0 0 20px rgba(79, 70, 229, 0.5) !important;
+            transform: scale(1.05);
+        }
+        
+        /* SHIMMER EFFECT */
+        @keyframes shimmer { 100% { transform: translateX(100%); } }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8 bg-slate-50 dark:bg-[#020617] text-slate-800 dark:text-slate-100 transition-colors duration-500">
+
+    <div class="max-w-[1280px] mx-auto space-y-8 pb-20">
+
+        <header class="flex flex-col md:flex-row justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-6 animate-entry relative z-20">
+            <div class="flex items-center gap-4 group cursor-default">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-neon group-hover:scale-110 group-hover:rotate-3 transition duration-500 ease-out">
+                    <span class="font-bold text-xl font-mono">SC</span>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold tracking-tight brand-logo filter drop-shadow-lg">SC DESIGNS</h1>
+                    <p class="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-[0.25em] font-bold group-hover:text-indigo-500 transition">Financial Engineering</p>
+                </div>
+            </div>
+            
+            <div class="mt-6 md:mt-0 flex gap-4 items-center">
+                <button onclick="toggleTheme()" class="p-2.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg hover:shadow-neon transition duration-300 text-indigo-500">
+                    <i id="theme-icon" class="ph-fill ph-moon text-xl"></i>
+                </button>
+
+                <div class="bg-white dark:bg-slate-900 p-1.5 rounded-lg flex border border-slate-200 dark:border-slate-800 shadow-inner">
+                    <button id="btn-bear" onclick="setScenario('bear')" class="px-5 py-2 rounded-md text-xs font-bold text-slate-500 hover:text-indigo-500 transition-all duration-300">BEAR</button>
+                    <button id="btn-base" onclick="setScenario('base')" class="px-5 py-2 rounded-md text-xs font-bold text-white bg-indigo-600 shadow-lg btn-active transition-all duration-300">BASE</button>
+                    <button id="btn-bull" onclick="setScenario('bull')" class="px-5 py-2 rounded-md text-xs font-bold text-slate-500 hover:text-indigo-500 transition-all duration-300">BULL</button>
+                </div>
+                
+                <button onclick="exportCSV()" class="group relative px-6 py-2.5 bg-slate-900 dark:bg-indigo-600 text-white rounded-lg text-sm font-bold hover:shadow-neon transition overflow-hidden shadow-xl">
+                    <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1s_infinite]"></div>
+                    <span class="flex items-center gap-2 relative z-10"><i class="ph ph-download-simple text-lg"></i> EXPORT</span>
+                </button>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-12 gap-6 relative z-10">
+            
+            <div class="col-span-12 lg:col-span-3 space-y-6 animate-entry">
+                <div class="glass-panel p-6 rounded-2xl">
+                    <div class="flex items-center gap-2 mb-5 text-indigo-500">
+                        <i class="ph ph-door-open text-xl"></i>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-white">Entry Specs</h3>
+                    </div>
+                    <div class="space-y-5">
+                        <div class="group">
+                            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">LTM EBITDA (₹)</label>
+                            <input type="number" id="entryEbitda" value="50000000" class="w-full rounded-lg px-3 py-2.5 font-mono text-sm border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#0f172a] text-slate-800 dark:text-white focus:border-indigo-500 focus:shadow-neon transition-all" oninput="calculate()">
+                        </div>
+                        <div class="group">
+                            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Entry Multiple (x)</label>
+                            <input type="number" id="entryMultiple" value="8.0" step="0.5" class="w-full rounded-lg px-3 py-2.5 font-mono text-sm border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#0f172a] text-slate-800 dark:text-white focus:border-indigo-500 focus:shadow-neon transition-all" oninput="calculate()">
+                        </div>
+                        <div class="group">
+                            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Debt Financing (%)</label>
+                            <input type="number" id="debtPercent" value="60" max="100" class="w-full rounded-lg px-3 py-2.5 font-mono text-sm border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#0f172a] text-slate-800 dark:text-white focus:border-indigo-500 focus:shadow-neon transition-all" oninput="calculate()">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-6 rounded-2xl">
+                    <div class="flex items-center gap-2 mb-5 text-emerald-500">
+                        <i class="ph ph-gear text-xl"></i>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-white">Op Model</h3>
+                    </div>
+                    <div class="space-y-5">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Growth (%)</label>
+                                <input type="number" id="growthRate" value="12" class="w-full rounded-lg px-3 py-2.5 font-mono text-sm border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#0f172a] text-slate-800 dark:text-white focus:border-emerald-500" oninput="calculate()">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Cost (%)</label>
+                                <input type="number" id="interestRate" value="9.0" step="0.5" class="w-full rounded-lg px-3 py-2.5 font-mono text-sm border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#0f172a] text-slate-800 dark:text-white focus:border-emerald-500" oninput="calculate()">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">FCF Conversion (%)</label>
+                            <input type="number" id="fcfConversion" value="65" max="100" class="w-full rounded-lg px-3 py-2.5 font-mono text-sm border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#0f172a] text-slate-800 dark:text-white focus:border-emerald-500 transition-colors" oninput="calculate()">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Exit Multiple (x)</label>
+                            <input type="number" id="exitMultiple" value="9.0" step="0.5" class="w-full rounded-lg px-3 py-2.5 font-mono text-sm border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#0f172a] text-slate-800 dark:text-white focus:border-emerald-500 transition-colors" oninput="calculate()">
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">
+                                <label>Holding Period</label>
+                                <span class="text-indigo-500 font-mono"><span id="hpLabel">5</span> Years</span>
+                            </div>
+                            <input type="range" id="holdingPeriod" min="3" max="7" value="5" class="w-full h-1.5 appearance-none cursor-pointer bg-slate-200 dark:bg-slate-700" oninput="document.getElementById('hpLabel').innerText = this.value; calculate()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-span-12 lg:col-span-9 space-y-6">
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 animate-entry">
+                    <div class="glass-panel p-5 rounded-2xl border-t-2 border-indigo-500 relative overflow-hidden group hover:shadow-neon transition duration-500">
+                        <div class="absolute -right-6 -top-6 w-24 h-24 bg-indigo-500/20 rounded-full blur-xl group-hover:scale-150 transition duration-700"></div>
+                        <p class="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold mb-2">IRR</p>
+                        <h2 class="text-4xl font-bold text-slate-800 dark:text-white font-mono tracking-tight" id="cardIRR">0.0%</h2>
+                    </div>
+                    <div class="glass-panel p-5 rounded-2xl border-t-2 border-blue-500 relative overflow-hidden group hover:shadow-neon transition duration-500">
+                        <div class="absolute -right-6 -top-6 w-24 h-24 bg-blue-500/20 rounded-full blur-xl group-hover:scale-150 transition duration-700"></div>
+                        <p class="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold mb-2">MOIC</p>
+                        <h2 class="text-4xl font-bold text-slate-800 dark:text-white font-mono tracking-tight" id="cardMOIC">0.00x</h2>
+                    </div>
+                     <div class="glass-panel p-5 rounded-2xl border-t-2 border-emerald-500 group">
+                        <p class="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold mb-2">Entry EV</p>
+                        <h2 class="text-2xl font-bold text-slate-800 dark:text-white font-mono tracking-tight" id="cardEntryEV">₹0</h2>
+                    </div>
+                    <div class="glass-panel p-5 rounded-2xl border-t-2 border-amber-500 group">
+                        <p class="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold mb-2">Exit Equity</p>
+                        <h2 class="text-2xl font-bold text-slate-800 dark:text-white font-mono tracking-tight" id="cardExitEquity">₹0</h2>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-entry">
+                    <div class="lg:col-span-2 glass-panel p-6 rounded-2xl">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Deleverage Profile</h3>
+                            <div class="flex items-center gap-3 text-[10px] font-mono text-slate-500 dark:text-slate-400">
+                                <span class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-indigo-500"></div> EBITDA</span>
+                                <span class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-rose-500"></div> DEBT</span>
+                            </div>
+                        </div>
+                        <div class="h-64">
+                            <canvas id="lboChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel p-6 rounded-2xl flex flex-col justify-between">
+                        <div class="mb-4">
+                            <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Sensitivity Matrix</h3>
+                            <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-2">IRR % Sensitivity</p>
+                        </div>
+                        <div class="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
+                            <table class="w-full text-center text-xs font-mono">
+                                <thead class="bg-slate-100 dark:bg-slate-900/50">
+                                    <tr>
+                                        <th class="text-slate-500 dark:text-slate-400 p-2 border-b border-r border-slate-200 dark:border-slate-800">In \ Out</th>
+                                        <th class="text-slate-700 dark:text-white p-2 border-b border-slate-200 dark:border-slate-800" id="sens_head_1">--</th>
+                                        <th class="text-indigo-600 dark:text-indigo-400 p-2 border-b border-slate-200 dark:border-slate-800 font-bold" id="sens_head_2">--</th>
+                                        <th class="text-slate-700 dark:text-white p-2 border-b border-slate-200 dark:border-slate-800" id="sens_head_3">--</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="sensitivityBody" class="bg-slate-50 dark:bg-slate-900/20">
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="mt-8 animate-entry z-20 relative">
+            <div class="glass-panel rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
+                <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/30">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-indigo-500/10 rounded-lg text-indigo-500"><i class="ph ph-table text-lg"></i></div>
+                        <h3 class="text-sm font-bold text-slate-700 dark:text-white uppercase tracking-widest">Cash Flow Waterfall</h3>
+                    </div>
+                    <div class="flex items-center gap-2 px-3 py-1 bg-emerald-500/10 rounded-full border border-emerald-500/20">
+                         <div class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                         <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold font-mono tracking-wider">LIVE CALCULATION</span>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase bg-slate-100 dark:bg-slate-900/50">
+                            <tr>
+                                <th class="px-8 py-4">Period</th>
+                                <th class="px-8 py-4 text-right">EBITDA</th>
+                                <th class="px-8 py-4 text-right text-indigo-500 dark:text-indigo-400">FCF</th>
+                                <th class="px-8 py-4 text-right">Interest</th>
+                                <th class="px-8 py-4 text-right text-emerald-600 dark:text-emerald-400">Repayment</th>
+                                <th class="px-8 py-4 text-right text-rose-500 dark:text-rose-400">Debt Bal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scheduleBody" class="divide-y divide-slate-200 dark:divide-slate-800/50 font-mono text-slate-600 dark:text-slate-300 text-xs bg-white dark:bg-transparent">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <footer class="text-center pt-10 pb-6 border-t border-slate-200 dark:border-slate-800/50 mt-12">
+            <p class="text-xs text-slate-500 font-medium tracking-wide">
+                &copy; Shreyaan Chauhan 2025 – All Rights Reserved.
+            </p>
+            <p class="text-[10px] text-slate-400 mt-2 uppercase tracking-widest opacity-60 hover:opacity-100 transition">Code Protected • SC Designs</p>
+        </footer>
+    </div>
+
+    <script>
+        // --- 0. PROTECTION SUITE ---
+        document.addEventListener('contextmenu', event => event.preventDefault()); 
+        document.onkeydown = function(e) {
+            if(e.keyCode == 123) return false; 
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false; 
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) return false; 
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false; 
+        }
+        console.log("%c SC DESIGNS | INDUSTRIAL BUILD ", "background: #6366f1; color: white; padding: 8px; border-radius: 4px; font-weight: bold; font-size: 12px;");
+
+        // --- 1. CONFIG ---
+        let lboChartInstance = null;
+        let scheduleDataCache = [];
+        
+        // --- 2. THEME SWITCHER LOGIC ---
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                icon.classList.remove('ph-moon'); icon.classList.add('ph-sun');
+                Chart.defaults.color = '#475569'; Chart.defaults.borderColor = '#e2e8f0';
+            } else {
+                html.classList.add('dark');
+                icon.classList.remove('ph-sun'); icon.classList.add('ph-moon');
+                Chart.defaults.color = '#94a3b8'; Chart.defaults.borderColor = '#1e293b';
+            }
+            calculate();
+        }
+
+        // --- 3. FORMATTING ---
+        const formatINR = (number) => {
+            if (number >= 10000000) return '₹' + (number / 10000000).toFixed(2) + ' Cr';
+            if (number >= 100000) return '₹' + (number / 100000).toFixed(2) + ' L';
+            return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(number);
+        };
+        const formatRawINR = (number) => new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(number);
+
+        // --- 4. ANIMATION ENGINE ---
+        function animateValue(id, start, end, formatFn, duration = 1.5) {
+            let obj = { val: start };
+            gsap.to(obj, {
+                val: end, duration: duration, ease: "power4.out", 
+                onUpdate: () => document.getElementById(id).innerText = formatFn ? formatFn(obj.val) : obj.val.toFixed(2)
+            });
+        }
+        function initAnimations() {
+            gsap.from(".animate-entry", { y: 50, opacity: 0, duration: 1, stagger: 0.15, ease: "power3.out" });
+        }
+
+        // --- 5. SCENARIO MANAGER (SAFARI FIX) ---
+        function setScenario(type) {
+            const inputs = {
+                growth: document.getElementById('growthRate'),
+                margin: document.getElementById('fcfConversion'),
+                exit: document.getElementById('exitMultiple')
+            };
+            if (type === 'bear') { inputs.growth.value = 5; inputs.margin.value = 50; inputs.exit.value = 7.0; }
+            else if (type === 'base') { inputs.growth.value = 12; inputs.margin.value = 65; inputs.exit.value = 9.0; }
+            else if (type === 'bull') { inputs.growth.value = 18; inputs.margin.value = 75; inputs.exit.value = 11.0; }
+
+            ['bear', 'base', 'bull'].forEach(t => {
+                const btn = document.getElementById('btn-' + t);
+                if(t === type) {
+                    btn.classList.add('btn-active');
+                    btn.classList.remove('text-slate-500', 'hover:text-indigo-500');
+                } else {
+                    btn.classList.remove('btn-active');
+                    btn.classList.add('text-slate-500', 'hover:text-indigo-500');
+                }
+            });
+
+            // FLASH EFFECT FIX
+            const isDark = document.documentElement.classList.contains('dark');
+            const flashColor = isDark ? "rgba(99, 102, 241, 0.4)" : "rgba(99, 102, 241, 0.2)";
+            
+            gsap.fromTo([inputs.growth, inputs.margin, inputs.exit], 
+                { backgroundColor: flashColor, borderColor: "#6366f1", scale: 1.05 }, 
+                { 
+                    backgroundColor: isDark ? "#0f172a" : "#f8fafc", 
+                    borderColor: isDark ? "#334155" : "#e2e8f0", 
+                    scale: 1, 
+                    duration: 0.6, 
+                    ease: "back.out(1.7)",
+                    onComplete: function() {
+                        // THIS FIXES SAFARI: Removes inline styles so classes take over
+                        gsap.set([inputs.growth, inputs.margin, inputs.exit], { clearProps: "all" });
+                    }
+                }
+            );
+            calculate();
+        }
+
+        // --- 6. CALCULATION ENGINE ---
+        function calculateIRR(cashFlows) {
+            let min = -1.0, max = 10.0, guess = 0.1, npv = 0;
+            for(let i=0; i<100; i++) {
+                npv = 0;
+                for(let t=0; t<cashFlows.length; t++) npv += cashFlows[t] / Math.pow(1+guess, t);
+                if(Math.abs(npv) < 1) break;
+                if(npv > 0) min = guess; else max = guess;
+                guess = (min + max) / 2;
+            }
+            return guess;
+        }
+
+        function calculate() {
+            const inputs = {
+                entryEbitda: parseFloat(document.getElementById('entryEbitda').value) || 0,
+                entryMultiple: parseFloat(document.getElementById('entryMultiple').value) || 0,
+                debtPercent: parseFloat(document.getElementById('debtPercent').value) || 0,
+                growthRate: parseFloat(document.getElementById('growthRate').value) / 100 || 0,
+                interestRate: parseFloat(document.getElementById('interestRate').value) / 100 || 0,
+                fcfConversion: parseFloat(document.getElementById('fcfConversion').value) / 100 || 0,
+                exitMultiple: parseFloat(document.getElementById('exitMultiple').value) || 0,
+                holdingPeriod: parseInt(document.getElementById('holdingPeriod').value) || 5
+            };
+
+            const entryEV = inputs.entryEbitda * inputs.entryMultiple;
+            const initialDebt = entryEV * (inputs.debtPercent / 100);
+            const initialEquity = entryEV - initialDebt;
+
+            let currentEbitda = inputs.entryEbitda, currentDebt = initialDebt;
+            let chartLabels = ['Y0'], chartEbitda = [currentEbitda], chartDebt = [initialDebt];
+            scheduleDataCache = [];
+
+            for (let year = 1; year <= inputs.holdingPeriod; year++) {
+                currentEbitda *= (1 + inputs.growthRate);
+                const fcf = currentEbitda * inputs.fcfConversion;
+                const interest = currentDebt * inputs.interestRate;
+                let repayment = Math.max(0, fcf - interest);
+                if (repayment > currentDebt) repayment = currentDebt;
+                currentDebt -= repayment;
+
+                scheduleDataCache.push({ year, ebitda: currentEbitda, fcf, interest, repayment, endingDebt: currentDebt });
+                chartLabels.push('Y' + year);
+                chartEbitda.push(currentEbitda);
+                chartDebt.push(currentDebt);
+            }
+
+            const exitEbitda = scheduleDataCache[inputs.holdingPeriod - 1].ebitda;
+            const exitEV = exitEbitda * inputs.exitMultiple;
+            const exitEquity = exitEV - scheduleDataCache[inputs.holdingPeriod - 1].endingDebt;
+            const moic = exitEquity / initialEquity;
+            
+            let cfs = [-initialEquity];
+            for(let i=1; i<inputs.holdingPeriod; i++) cfs.push(0);
+            cfs.push(exitEquity);
+            const irr = calculateIRR(cfs);
+
+            animateValue('cardIRR', 0, irr * 100, val => val.toFixed(1) + '%');
+            animateValue('cardMOIC', 0, moic, val => val.toFixed(2) + 'x');
+            document.getElementById('cardEntryEV').innerText = formatINR(entryEV);
+            document.getElementById('cardExitEquity').innerText = formatINR(exitEquity);
+            
+            updateTable();
+            updateChart(chartLabels, chartEbitda, chartDebt);
+            updateSensitivity(inputs.entryMultiple, inputs.exitMultiple, inputs);
+        }
+
+        function updateSensitivity(baseEntry, baseExit, inputs) {
+            const entrySteps = [baseEntry - 1, baseEntry, baseEntry + 1];
+            const exitSteps = [baseExit - 1, baseExit, baseExit + 1];
+            
+            document.getElementById('sens_head_1').innerText = exitSteps[0].toFixed(1) + 'x';
+            document.getElementById('sens_head_2').innerText = exitSteps[1].toFixed(1) + 'x';
+            document.getElementById('sens_head_3').innerText = exitSteps[2].toFixed(1) + 'x';
+
+            let html = '';
+            entrySteps.forEach((enMult) => {
+                let rowHtml = `<tr><td class="text-slate-500 dark:text-slate-400 font-bold p-2 text-right border-r border-slate-200 dark:border-slate-800">${enMult.toFixed(1)}x</td>`;
+                exitSteps.forEach(exMult => {
+                    const s_entryEV = inputs.entryEbitda * enMult;
+                    const s_initDebt = s_entryEV * (inputs.debtPercent/100);
+                    const s_initEq = s_entryEV - s_initDebt;
+                    let s_ebitda = inputs.entryEbitda, s_debt = s_initDebt;
+                    for(let y=1; y<=inputs.holdingPeriod; y++){
+                        s_ebitda *= (1+inputs.growthRate);
+                        let fcf = s_ebitda * inputs.fcfConversion;
+                        let int = s_debt * inputs.interestRate;
+                        let pay = Math.max(0, fcf - int);
+                        if(pay > s_debt) pay = s_debt;
+                        s_debt -= pay;
+                    }
+                    const s_exitEV = s_ebitda * exMult;
+                    const s_exitEq = s_exitEV - s_debt;
+                    let s_cfs = [-s_initEq];
+                    for(let k=1; k<inputs.holdingPeriod; k++) s_cfs.push(0);
+                    s_cfs.push(s_exitEq);
+                    const s_irr = calculateIRR(s_cfs) * 100;
+                    
+                    let colorClass = 'text-rose-500';
+                    if(s_irr > 15) colorClass = 'text-amber-500';
+                    if(s_irr > 20) colorClass = 'text-emerald-500';
+                    if(s_irr > 25) colorClass = 'text-emerald-600 font-bold';
+
+                    rowHtml += `<td class="p-2 cursor-default hover:bg-slate-200 dark:hover:bg-slate-700 transition duration-200 rounded ${colorClass}">${s_irr.toFixed(1)}%</td>`;
+                });
+                rowHtml += '</tr>';
+                html += rowHtml;
+            });
+            document.getElementById('sensitivityBody').innerHTML = html;
+        }
+
+        function updateTable() {
+            const tbody = document.getElementById('scheduleBody');
+            tbody.innerHTML = '';
+            scheduleDataCache.forEach((row, index) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 dark:hover:bg-slate-800/50 transition duration-150"; 
+                tr.innerHTML = `
+                    <td class="px-8 py-4 font-medium text-slate-700 dark:text-white">Year ${row.year}</td>
+                    <td class="px-8 py-4 text-right text-slate-500 dark:text-slate-400">${formatRawINR(row.ebitda)}</td>
+                    <td class="px-8 py-4 text-right text-indigo-500 dark:text-indigo-400 font-bold">${formatRawINR(row.fcf)}</td>
+                    <td class="px-8 py-4 text-right text-slate-500 dark:text-slate-500">${formatRawINR(row.interest)}</td>
+                    <td class="px-8 py-4 text-right text-emerald-600 dark:text-emerald-400 font-bold">(${formatRawINR(row.repayment)})</td>
+                    <td class="px-8 py-4 text-right font-bold text-rose-500 dark:text-rose-400">${formatRawINR(row.endingDebt)}</td>
+                `;
+                tbody.appendChild(tr);
+                gsap.fromTo(tr, {opacity: 0, x: -20}, {opacity: 1, x: 0, duration: 0.4, delay: index * 0.1});
+            });
+        }
+
+        function updateChart(labels, ebitda, debt) {
+            const ctx = document.getElementById('lboChart').getContext('2d');
+            if (lboChartInstance) lboChartInstance.destroy();
+
+            const isDark = document.documentElement.classList.contains('dark');
+            const gridColor = isDark ? '#1e293b' : '#e2e8f0';
+
+            let grad = ctx.createLinearGradient(0, 200, 0, 0);
+            grad.addColorStop(0, 'rgba(99, 102, 241, 0.1)');
+            grad.addColorStop(1, 'rgba(99, 102, 241, 0.6)');
+
+            lboChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Debt', data: debt, borderColor: '#f43f5e', backgroundColor: 'rgba(244, 63, 94, 0.1)', borderWidth: 3, pointRadius: 4, pointHoverRadius: 6, tension: 0.4, fill: true, yAxisID: 'y' },
+                        { type: 'bar', label: 'EBITDA', data: ebitda, backgroundColor: grad, borderRadius: 6, barPercentage: 0.6, yAxisID: 'y' }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    animation: { duration: 1200, easing: 'easeOutQuart' },
+                    plugins: { legend: { display: false }, tooltip: { backgroundColor: isDark ? '#1e293b' : '#ffffff', titleColor: isDark ? '#fff' : '#0f172a', bodyColor: isDark ? '#cbd5e1' : '#475569', borderColor: '#6366f1', borderWidth: 1 } },
+                    scales: {
+                        y: { grid: { color: gridColor }, ticks: { callback: v => (v/10000000).toFixed(0) + 'Cr' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function exportCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,Year,EBITDA,FCF,Interest,Repayment,Ending Debt\n";
+            scheduleDataCache.forEach(r => csvContent += `${r.year},${r.ebitda},${r.fcf},${r.interest},${r.repayment},${r.endingDebt}\n`);
+            const link = document.createElement("a");
+            link.href = encodeURI(csvContent);
+            link.download = "SC_Designs_LBO.csv";
+            link.click();
+        }
+
+        window.onload = () => {
+            Chart.defaults.color = '#94a3b8';
+            Chart.defaults.borderColor = '#1e293b';
+            Chart.defaults.font.family = "'JetBrains Mono', monospace";
+            initAnimations();
+            calculate();
+        };
+    </script>
+</body>
+</html>
