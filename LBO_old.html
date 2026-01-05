@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro LBO Model | Financial Valuation Tool</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        /* Custom Scrollbar for Table */
+        .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen p-4 md:p-8">
+
+    <div class="max-w-[1100px] mx-auto space-y-8">
+
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-200 pb-6">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-900 tracking-tight">LBO Model <span class="text-indigo-600">Pro</span></h1>
+                <p class="text-slate-500 mt-1 text-sm">Leveraged Buyout Analysis & Returns Calculator</p>
+            </div>
+            <div class="mt-4 md:mt-0 flex gap-2">
+                <button onclick="resetModel()" class="px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium hover:bg-slate-50 transition shadow-sm text-slate-600">Reset</button>
+                <button onclick="exportCSV()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition shadow-sm flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Export CSV
+                </button>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm">1</div>
+                    <h2 class="text-lg font-semibold text-slate-800">Entry Assumptions</h2>
+                </div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Entry EBITDA (₹)</label>
+                        <input type="number" id="entryEbitda" value="50000000" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono text-slate-700" oninput="calculate()">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Entry Multiple (x)</label>
+                            <input type="number" id="entryMultiple" value="8.0" step="0.1" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono text-slate-700" oninput="calculate()">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Debt Financing (%)</label>
+                            <input type="number" id="debtPercent" value="60" max="100" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono text-slate-700" oninput="calculate()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-sm">2</div>
+                    <h2 class="text-lg font-semibold text-slate-800">Operating & Exit</h2>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 space-y-0">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Growth Rate (%)</label>
+                        <input type="number" id="growthRate" value="10" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono text-slate-700" oninput="calculate()">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Interest Rate (%)</label>
+                        <input type="number" id="interestRate" value="8.0" step="0.1" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono text-slate-700" oninput="calculate()">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">FCF / EBITDA (%)</label>
+                        <input type="number" id="fcfConversion" value="70" max="100" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono text-slate-700" oninput="calculate()">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Exit Multiple (x)</label>
+                        <input type="number" id="exitMultiple" value="8.0" step="0.1" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono text-slate-700" oninput="calculate()">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Holding Period (Years)</label>
+                        <input type="range" id="holdingPeriod" min="3" max="10" value="5" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" oninput="document.getElementById('hpLabel').innerText = this.value; calculate()">
+                        <div class="text-right text-xs text-slate-500 mt-1"><span id="hpLabel">5</span> Years</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            
+            <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-100">
+                <p class="text-xs text-slate-500 font-medium">Entry Enterprise Value</p>
+                <p id="cardEntryEV" class="text-lg font-bold text-slate-800 mt-1 font-mono">--</p>
+            </div>
+
+            <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-100">
+                <p class="text-xs text-slate-500 font-medium">Entry Equity Check</p>
+                <p id="cardEntryEquity" class="text-lg font-bold text-indigo-600 mt-1 font-mono">--</p>
+            </div>
+
+            <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-100">
+                <p class="text-xs text-slate-500 font-medium">Exit Equity Value</p>
+                <p id="cardExitEquity" class="text-lg font-bold text-emerald-600 mt-1 font-mono">--</p>
+            </div>
+
+            <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-100">
+                <p class="text-xs text-slate-500 font-medium">MOIC (Multiple)</p>
+                <p id="cardMOIC" class="text-2xl font-bold text-slate-900 mt-1">--x</p>
+            </div>
+
+            <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-100">
+                <p class="text-xs text-slate-500 font-medium">Internal Rate of Return</p>
+                <p id="cardIRR" class="text-2xl font-bold text-slate-900 mt-1">--%</p>
+            </div>
+
+            <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-100">
+                <p class="text-xs text-slate-500 font-medium">Debt Paid Down</p>
+                <p id="cardDebtPaid" class="text-lg font-bold text-slate-700 mt-1 font-mono">--%</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <h3 class="text-sm font-bold text-slate-700 mb-4 uppercase tracking-wide">Debt Paydown vs EBITDA Profile</h3>
+                <div class="relative h-72 w-full">
+                    <canvas id="lboChart"></canvas>
+                </div>
+            </div>
+
+            <div class="bg-slate-800 text-white p-6 rounded-xl shadow-md flex flex-col justify-between">
+                <div>
+                    <h3 class="text-lg font-bold mb-4">Investment Summary</h3>
+                    <div class="space-y-4 text-sm text-slate-300">
+                        <div class="flex justify-between border-b border-slate-700 pb-2">
+                            <span>Cash on Cash:</span>
+                            <span id="summaryCoC" class="font-mono text-white font-bold">--</span>
+                        </div>
+                        <div class="flex justify-between border-b border-slate-700 pb-2">
+                            <span>Initial Leverage:</span>
+                            <span id="summaryLev" class="font-mono text-white font-bold">--</span>
+                        </div>
+                        <div class="flex justify-between border-b border-slate-700 pb-2">
+                            <span>Exit EBITDA:</span>
+                            <span id="summaryExitEbitda" class="font-mono text-white font-bold">--</span>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="copySummary()" class="mt-6 w-full py-2 bg-slate-700 hover:bg-slate-600 rounded text-xs font-semibold uppercase tracking-wider transition">Copy Summary</button>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-6 border-b border-slate-100">
+                <h3 class="text-lg font-semibold text-slate-800">Cash Flow Schedule</h3>
+            </div>
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-slate-50 text-slate-500 uppercase text-xs font-semibold">
+                        <tr>
+                            <th class="px-6 py-3">Year</th>
+                            <th class="px-6 py-3 text-right">EBITDA</th>
+                            <th class="px-6 py-3 text-right">Free Cash Flow</th>
+                            <th class="px-6 py-3 text-right">Interest Expense</th>
+                            <th class="px-6 py-3 text-right text-emerald-600">Principal Repayment</th>
+                            <th class="px-6 py-3 text-right text-red-500">Ending Debt</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scheduleBody" class="divide-y divide-slate-100 font-mono text-slate-700">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+        <footer class="text-center text-xs text-slate-400 pb-8">
+            &copy; 2025 Shreyaan Chauhan. All Rights Reserved.
+        </footer>
+    </div>
+
+    <script>
+        // Global Chart Instance
+        let lboChartInstance = null;
+        let scheduleDataCache = []; // Store calculated data for CSV export
+
+        // 1. Utility: Indian Currency Formatter
+        const formatINR = (number) => {
+            return new Intl.NumberFormat('en-IN', {
+                style: 'currency',
+                currency: 'INR',
+                maximumFractionDigits: 0
+            }).format(number);
+        };
+
+        const formatNumber = (number) => {
+             return new Intl.NumberFormat('en-IN', { maximumFractionDigits: 1 }).format(number);
+        };
+
+        // 2. IRR Calculation (Newton-Raphson Method)
+        // Solves for r in: Σ (CashFlow_t / (1+r)^t) = 0
+        function calculateIRR(cashFlows, guess = 0.1) {
+            const maxIter = 1000;
+            const tolerance = 0.000001;
+            let rate = guess;
+
+            for (let i = 0; i < maxIter; i++) {
+                let npv = 0;
+                let dNpv = 0; // Derivative of NPV
+
+                for (let t = 0; t < cashFlows.length; t++) {
+                    npv += cashFlows[t] / Math.pow(1 + rate, t);
+                    dNpv -= (t * cashFlows[t]) / Math.pow(1 + rate, t + 1);
+                }
+
+                if (Math.abs(npv) < tolerance) return rate;
+
+                const newRate = rate - (npv / dNpv);
+                if (Math.abs(newRate - rate) < tolerance) return newRate;
+                rate = newRate;
+            }
+            return rate;
+        }
+
+        // 3. Main Calculation Engine
+        function calculate() {
+            // -- Gather Inputs --
+            const entryEbitda = parseFloat(document.getElementById('entryEbitda').value) || 0;
+            const entryMultiple = parseFloat(document.getElementById('entryMultiple').value) || 0;
+            const debtPercent = parseFloat(document.getElementById('debtPercent').value) || 0;
+            const growthRate = parseFloat(document.getElementById('growthRate').value) / 100 || 0;
+            const interestRate = parseFloat(document.getElementById('interestRate').value) / 100 || 0;
+            const fcfConversion = parseFloat(document.getElementById('fcfConversion').value) / 100 || 0;
+            const exitMultiple = parseFloat(document.getElementById('exitMultiple').value) || 0;
+            const holdingPeriod = parseInt(document.getElementById('holdingPeriod').value) || 5;
+
+            // -- Entry Calculations --
+            const entryEV = entryEbitda * entryMultiple;
+            const initialDebt = entryEV * (debtPercent / 100);
+            const initialEquity = entryEV - initialDebt;
+
+            // -- Schedule Loop --
+            let currentEbitda = entryEbitda;
+            let currentDebt = initialDebt;
+            
+            scheduleDataCache = []; // Reset Data
+            let chartLabels = [];
+            let chartEbitda = [];
+            let chartDebt = [];
+
+            // Add Year 0 (Entry)
+            chartLabels.push('Year 0');
+            chartEbitda.push(entryEbitda);
+            chartDebt.push(initialDebt);
+
+            for (let year = 1; year <= holdingPeriod; year++) {
+                // Operating metrics
+                currentEbitda = currentEbitda * (1 + growthRate);
+                const fcf = currentEbitda * fcfConversion;
+                const interest = currentDebt * interestRate;
+                
+                // Debt Paydown Logic (Simple Cash Sweep)
+                // Determine how much principal can be paid. 
+                // Can't pay more than debt outstanding.
+                let principalRepayment = Math.max(0, fcf - interest);
+                if (principalRepayment > currentDebt) {
+                    principalRepayment = currentDebt;
+                }
+                
+                const beginningDebt = currentDebt;
+                currentDebt = beginningDebt - principalRepayment;
+
+                // Push to data array
+                scheduleDataCache.push({
+                    year,
+                    ebitda: currentEbitda,
+                    fcf,
+                    interest,
+                    repayment: principalRepayment,
+                    endingDebt: currentDebt
+                });
+
+                // Chart Data
+                chartLabels.push(`Year ${year}`);
+                chartEbitda.push(currentEbitda);
+                chartDebt.push(currentDebt);
+            }
+
+            // -- Exit Calculations --
+            const exitEbitda = scheduleDataCache[holdingPeriod - 1].ebitda;
+            const endingDebt = scheduleDataCache[holdingPeriod - 1].endingDebt;
+            const exitEV = exitEbitda * exitMultiple;
+            const exitEquity = exitEV - endingDebt;
+
+            // -- Returns Calculations --
+            const moic = exitEquity / initialEquity;
+            
+            // Prepare Cash Flows for IRR: [ -InitialEquity, 0, 0, ... , +ExitEquity ]
+            // Note: Assuming no dividends during holding period, all FCF went to debt.
+            let cashFlows = [-initialEquity];
+            for(let i=1; i<holdingPeriod; i++) cashFlows.push(0);
+            cashFlows.push(exitEquity);
+
+            const irr = calculateIRR(cashFlows);
+            const cashOnCash = exitEquity - initialEquity;
+            const debtPaidAmt = initialDebt - endingDebt;
+            const debtPaidPercent = (debtPaidAmt / initialDebt) * 100;
+
+            // -- UI Updates --
+            
+            // Cards
+            document.getElementById('cardEntryEV').innerText = formatINR(entryEV);
+            document.getElementById('cardEntryEquity').innerText = formatINR(initialEquity);
+            document.getElementById('cardExitEquity').innerText = formatINR(exitEquity);
+            document.getElementById('cardMOIC').innerText = moic.toFixed(2) + 'x';
+            document.getElementById('cardIRR').innerText = (irr * 100).toFixed(1) + '%';
+            document.getElementById('cardDebtPaid').innerText = isNaN(debtPaidPercent) ? '0%' : debtPaidPercent.toFixed(1) + '%';
+
+            // Summary Box
+            document.getElementById('summaryCoC').innerText = formatINR(cashOnCash);
+            document.getElementById('summaryLev').innerText = (initialDebt / entryEbitda).toFixed(1) + 'x';
+            document.getElementById('summaryExitEbitda').innerText = formatINR(exitEbitda);
+
+            // Table Render
+            renderTable();
+
+            // Chart Render
+            renderChart(chartLabels, chartEbitda, chartDebt);
+        }
+
+        // 4. Render Table
+        function renderTable() {
+            const tbody = document.getElementById('scheduleBody');
+            tbody.innerHTML = '';
+
+            scheduleDataCache.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition";
+                tr.innerHTML = `
+                    <td class="px-6 py-4 font-bold text-slate-800">${row.year}</td>
+                    <td class="px-6 py-4 text-right">${formatINR(row.ebitda)}</td>
+                    <td class="px-6 py-4 text-right text-slate-600">${formatINR(row.fcf)}</td>
+                    <td class="px-6 py-4 text-right text-slate-600">${formatINR(row.interest)}</td>
+                    <td class="px-6 py-4 text-right text-emerald-600 font-medium">(${formatINR(row.repayment)})</td>
+                    <td class="px-6 py-4 text-right font-bold text-red-500">${formatINR(row.endingDebt)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 5. Render Chart
+        function renderChart(labels, ebitdaData, debtData) {
+            const ctx = document.getElementById('lboChart').getContext('2d');
+
+            if (lboChartInstance) {
+                lboChartInstance.destroy();
+            }
+
+            lboChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'EBITDA Growth',
+                            data: ebitdaData,
+                            backgroundColor: '#6366f1', // Indigo 500
+                            borderRadius: 4,
+                            order: 2
+                        },
+                        {
+                            label: 'Debt Balance',
+                            data: debtData,
+                            type: 'line',
+                            borderColor: '#ef4444', // Red 500
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            fill: true,
+                            order: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(context.parsed.y);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#f1f5f9'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    // Shorten numbers for axis (e.g. 5Cr)
+                                    if(value >= 10000000) return '₹' + (value/10000000).toFixed(1) + 'Cr';
+                                    if(value >= 100000) return '₹' + (value/100000).toFixed(1) + 'L';
+                                    return value;
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 6. Reset Function
+        function resetModel() {
+            document.getElementById('entryEbitda').value = 50000000;
+            document.getElementById('entryMultiple').value = 8.0;
+            document.getElementById('debtPercent').value = 60;
+            document.getElementById('growthRate').value = 10;
+            document.getElementById('interestRate').value = 8.0;
+            document.getElementById('fcfConversion').value = 70;
+            document.getElementById('exitMultiple').value = 8.0;
+            document.getElementById('holdingPeriod').value = 5;
+            document.getElementById('hpLabel').innerText = 5;
+            calculate();
+        }
+
+        // 7. Copy Summary
+        function copySummary() {
+            const ev = document.getElementById('cardEntryEV').innerText;
+            const moic = document.getElementById('cardMOIC').innerText;
+            const irr = document.getElementById('cardIRR').innerText;
+            
+            const text = `LBO Model Summary:\nEntry EV: ${ev}\nMOIC: ${moic}\nIRR: ${irr}`;
+            navigator.clipboard.writeText(text).then(() => {
+                alert("Summary copied to clipboard!");
+            });
+        }
+
+        // 8. Export CSV
+        function exportCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Year,EBITDA,Free Cash Flow,Interest Expense,Principal Repayment,Ending Debt\n";
+
+            scheduleDataCache.forEach(row => {
+                const rowStr = `${row.year},${row.ebitda},${row.fcf},${row.interest},${row.repayment},${row.endingDebt}`;
+                csvContent += rowStr + "\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "LBO_Schedule.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Initial Calculation on Load
+        window.onload = calculate;
+
+    </script>
+</body>
+</html>
